@@ -3,7 +3,8 @@ require_relative 'utilities'
 # -----------------------------------------------------------------------------
 # Player class that handles playing turns of a single player
 class Player
-  attr_reader :total_score, :is_active
+  attr_reader :total_score
+  attr_accessor :is_active
 
   # -------------------------------------------------------------------------
   def initialize
@@ -31,6 +32,22 @@ class Player
   end
 
   # -------------------------------------------------------------------------
+  def process_user_input(turn_score)
+    # Ask if player is happy with the current turn score
+    # and does not want to be greedy for more score
+    puts 'Do you want to play more? ([Y]/n): '
+    play_more = gets.strip
+
+    if play_more == 'n'
+      turn_score = 0 if @is_active == false
+      @total_score += turn_score
+      puts "Total score: #{@total_score}"
+      return false
+    end
+    true
+  end
+
+  # -------------------------------------------------------------------------
   def play_my_turn(number_of_dices)
     # Returns score of the current turn and
     # also updates his/her total score
@@ -41,19 +58,8 @@ class Player
     utilities = Utilities.new
 
     while current_available > 0
-
-      # Ask if player is happy with the current turn score
-      # and does not want to be greedy for more score
-      puts 'Do you want to play more? ([Y]/n): '
-      play_more = gets.strip
-
-      if play_more == 'n'
-        turn_score = 0 if @is_active == false
-        @total_score += turn_score
-        puts "Total score: #{@total_score}"
-        return turn_score
-      end
-
+      continue_playing = process_user_input(turn_score)
+      return turn_score if continue_playing == false
       dice_values, turn_score = roll_dice(turn_score,
                                           current_available,
                                           utilities)

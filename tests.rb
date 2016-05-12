@@ -7,16 +7,13 @@ describe Utilities do
     end
 
     it 'can compute a frequency hash' do
-      expect(@utilities.to_frequency([1, 1, 2, 3, 4, 4, 4])).to eql({1 => 2,
-                                                                     2 => 1,
-                                                                     3 => 1,
-                                                                     4 => 3})
+      expected = { 1 => 2, 2 => 1, 3 => 1, 4 => 3 }
+      expect(@utilities.to_frequency([1, 1, 2, 3, 4, 4, 4])).to eql(expected)
     end
 
     it 'can compute a frequency hash for empty input' do
       expect(@utilities.to_frequency([])).to eql({})
     end
-
   end
 
   describe 'Utilities#dice_roll' do
@@ -145,6 +142,32 @@ describe Player do
     allow(utilities).to receive(:dice_roll).and_return([1, 1, 1])
     _, actual_score = @player.roll_dice(1000, 3, utilities)
     expect(actual_score).to eq(2000)
+  end
+
+  it 'can process user input anything except n' do
+    previous_score = @player.total_score
+    allow(@player).to receive(:gets).and_return("y\n")
+    expect(@player.process_user_input(300)).to eq(true)
+    expect(@player.total_score).to eq(previous_score)
+
+    allow(@player).to receive(:gets).and_return("Y\n")
+    expect(@player.process_user_input(300)).to eq(true)
+    expect(@player.total_score).to eq(previous_score)
+
+    allow(@player).to receive(:gets).and_return("\n")
+    expect(@player.process_user_input(300)).to eq(true)
+    expect(@player.total_score).to eq(previous_score)
+  end
+
+  it 'can process user input n' do
+    previous_score = @player.total_score
+    allow(@player).to receive(:gets).and_return("n\n")
+    expect(@player.process_user_input(300)).to eq(false)
+    expect(@player.total_score).to eq(previous_score)
+
+    @player.is_active = true
+    expect(@player.process_user_input(300)).to eq(false)
+    expect(@player.total_score).to eq(previous_score + 300)
   end
 
   it 'can play a turn with 300 barrier is cleared' do
