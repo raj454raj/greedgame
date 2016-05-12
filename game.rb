@@ -37,7 +37,7 @@ class Game
   end
 
   # -------------------------------------------------------------------------
-  def get_results
+  def obtain_results
     puts 'GAME COMPLETE'
     indices = @total_score.each_index.select do |i|
       @total_score[i] == @total_score.max
@@ -47,11 +47,8 @@ class Game
 
   # -------------------------------------------------------------------------
   def play_game
-    iteration = 1
     break_index = catch(:lastround) do
       loop do
-        puts "Playing iteration number #{iteration}"
-        iteration += 1
         @number_of_players.times do |i|
           update_total_score(i)
           throw(:lastround, i) if @total_score[i] >= 3000
@@ -64,7 +61,7 @@ class Game
       update_total_score(i)
     end
 
-    @winner = get_results
+    @winner = obtain_results
     puts "Winner: #{@winner.join(' ')}"
   end
 end

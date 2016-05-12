@@ -240,17 +240,17 @@ describe Game do
 
   it 'can find a unique winner' do
     @game.total_score = [1, 2, 3, 4]
-    expect(@game.get_results).to eq [4]
+    expect(@game.obtain_results).to eq [4]
   end
 
   it 'can find more than one winners' do
     @game.total_score = [1, 3, 3]
-    expect(@game.get_results).to eq [2, 3]
+    expect(@game.obtain_results).to eq [2, 3]
   end
 
   it 'can find winners if all of them have same score' do
     @game.total_score = [5, 5, 5, 5]
-    expect(@game.get_results).to eq [1, 2, 3, 4]
+    expect(@game.obtain_results).to eq [1, 2, 3, 4]
   end
 
   it 'can stop the game after one of the user score has reached 3000' do

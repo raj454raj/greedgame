@@ -44,7 +44,7 @@ class Player
 
       # Ask if player is happy with the current turn score
       # and does not want to be greedy for more score
-      puts 'Do you want to play more? (y/n): '
+      puts 'Do you want to play more? ([Y]/n): '
       play_more = gets.strip
 
       if play_more == 'n'
@@ -71,7 +71,6 @@ class Player
       current_available = allowed_dices if current_available == 0
 
       puts "Current available #{current_available}"
-
     end
 
     turn_score = 0 if @is_active == false

@@ -42,7 +42,6 @@ class Utilities
         final_score += residue * 50 if k == 5
       end
     end
-
     final_score
   end
 
