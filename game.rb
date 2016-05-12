@@ -1,32 +1,11 @@
-# EXTRA CREDIT:
-#
-# Create a program that will play the Greed Game.
-# Rules for the game are in GREED_RULES.TXT.
-#
-# You already have a DiceSet class and score function you can use.
-# Write a player class and a Game class to complete the project.  This
-# is a free form assignment, so approach it however you desire.
-
 # -----------------------------------------------------------------------------
-
-class DiceSet
-    attr_accessor :values
-
-    # -------------------------------------------------------------------------
-    def initialize
-        @values = []
+def dice_roll(n)
+    values = []
+    n.times do
+        values += [Random.rand(6) + 1]
     end
-
-    # -------------------------------------------------------------------------
-    def roll(n)
-        @values = []
-        n.times do
-            @values += [Random.rand(6) + 1]
-        end
-    end
+    return values
 end
-
-$dice = DiceSet.new
 
 # -----------------------------------------------------------------------------
 def score(dice)
@@ -73,7 +52,7 @@ def get_non_scoring(dice_values)
     frequency.each do |k, v|
         triplets = v / 3
         residue = v % 3
-        # Subtract number
+        # Subtract number of triplets
         non_scoring -= triplets * 3
         if k == 1 || k == 5
             non_scoring -= residue
@@ -81,12 +60,12 @@ def get_non_scoring(dice_values)
     end
 
     return non_scoring
-
-    dice_values.select{ |a| a != 1 && a != 5 }.length
 end
 
 # -----------------------------------------------------------------------------
 class Player
+
+    attr_reader :total_score, :is_active
 
     # -------------------------------------------------------------------------
     def initialize
@@ -95,9 +74,32 @@ class Player
     end
 
     # -------------------------------------------------------------------------
+    def roll_dice(old_turn_score, current_available)
+
+        # Roll the available number of dices
+        dice_values = dice_roll(current_available)
+
+        # Update the turn_score
+        current_roll_score = score(dice_values)
+
+        turn_score = old_turn_score + current_roll_score
+        # Just for the purpose of consistent logging
+        turn_score = 0 if current_roll_score == 0
+
+        puts "Current dice values: " + dice_values.join(" ")
+        puts "Current turn score: #{turn_score}"
+        puts "Total score: #{@total_score}"
+
+        return dice_values, turn_score
+
+    end
+
+    # -------------------------------------------------------------------------
     def play_my_turn(number_of_dices)
         # Returns score of the current turn and
         # also updates his/her total score
+
+        allowed_dices = number_of_dices
         current_available = number_of_dices
         turn_score = 0
 
@@ -115,26 +117,10 @@ class Player
                 return turn_score
             end
 
-            # Roll the available number of dices
-            $dice.roll(current_available)
+            dice_values, turn_score = roll_dice(turn_score, current_available)
 
-            # Update the turn_score
-            dice_values = $dice.values
-
-            current_roll_score = score(dice_values)
-            turn_score += current_roll_score
-
-            # Just for the purpose of consistent logging
-            turn_score = 0 if current_roll_score == 0
-
-            puts "Current dice values: " + dice_values.join(" ")
-            puts "Current turn score: #{turn_score}"
-            puts "Total score: #{@total_score}"
-
-            if current_roll_score == 0
-                # If a roll scores 0, score of complete turn is 0
-                return 0
-            end
+            # If a roll scores 0, score of complete turn is 0
+            return 0 if turn_score == 0
 
             # Update is_active if turn_score exceeded 300
             if @is_active == false
@@ -143,13 +129,11 @@ class Player
 
             # Update the current available dices for next hand
             current_available = get_non_scoring(dice_values)
-            puts "Current available #{current_available}"
 
             # Check if all the dices were scoring
-            if current_available == dice_values.length
-                turn_score = 0 if @is_active == false
-                return turn_score
-            end
+            current_available = allowed_dices if current_available == 0
+
+            puts "Current available #{current_available}"
 
         end
 
@@ -165,8 +149,18 @@ end
 # -----------------------------------------------------------------------------
 class Game
 
+    attr_accessor :total_score
+    attr_reader :winner
+    attr_reader :number_of_players
+    attr_reader :players
+
     # -------------------------------------------------------------------------
     def initialize(number_of_players)
+
+        if number_of_players < 2
+            raise RuntimeError, "Atleast 2 players are required to play the game"
+        end
+
         @number_of_players = number_of_players
         @number_of_dices = 5
         # All the player objects
@@ -179,53 +173,63 @@ class Game
             @total_score[i] = 0
         end
 
+        # Will be updated only after the game is over
+        @winner = []
+
+    end
+
+    # -------------------------------------------------------------------------
+    def update_total_score(i)
+
+        puts i
+        puts "Player #{i + 1}"
+        @total_score[i] += @players[i].play_my_turn(@number_of_dices)
+        puts "***********************************************"
+        puts @total_score
+
+    end
+
+    # -------------------------------------------------------------------------
+    def get_results
+
+        puts "GAME COMPLETE"
+        indices = @total_score.each_index.select{|i| @total_score[i] == @total_score.max}
+        indices.map { |i| i + 1 }
+
     end
 
     # -------------------------------------------------------------------------
     def play_game
 
         iteration = 1
-
         break_index = catch(:lastround) do
-
             while true
-
                 puts "Playing iteration number #{iteration}"
                 iteration += 1
-
                 for i in 0...@number_of_players
-                    puts "Player #{i + 1}"
-                    @total_score[i] += @players[i].play_my_turn(@number_of_dices)
-                    puts "***************************************"
+                    update_total_score(i)
                     throw(:lastround, i) if @total_score[i] >= 3000
-                    p @total_score
                 end
-
                 puts "\n\n------------------------------------------\n\n"
-
             end
-
         end
 
         for i in (break_index + 1)...@number_of_players
-            puts "Player #{i + 1}"
-            @total_score[i] += @players[i].play_my_turn(@number_of_dices)
-            p @total_score
-            puts "***************************************"
+            update_total_score(i)
         end
-        puts "GAME COMPLETE"
+
+        @winner = get_results()
+        puts "Winner: #{@winner.join(" ")}"
     end
 
 end
 
-puts "Enter number of players: "
-players = gets.strip().to_i
+if __FILE__ == $0
+    puts "Enter number of players: "
+    players = gets.strip.to_i
 
-if players > 1
     game = Game.new(players)
     game.play_game
-else
-    puts "Insufficient players to start the game"
 end
 
 # END===========================================================================
